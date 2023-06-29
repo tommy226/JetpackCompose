@@ -11,10 +11,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sungbin.jetpackcomposestudy.data.WellnessTask
 import com.sungbin.jetpackcomposestudy.ui.theme.JetpackComposeStudyTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,7 +47,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    StudyApp()
+                    WellnessScreen()
                 }
             }
         }
@@ -46,114 +55,53 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun StudyApp(modifier: Modifier = Modifier) {
-    GridSolution()
-}
-
-@Composable
-fun GridSolution(modifier: Modifier = Modifier) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(modifier = Modifier.weight(1f)) {
-            CardSection(
-                title = stringResource(id = R.string.grid_title_1),
-                text = stringResource(id = R.string.grid_text_1),
-                backgroundColor = Color.Green,
-                modifier = Modifier.weight(1f)
-            )
-            CardSection(
-                title = stringResource(id = R.string.grid_title_2),
-                text = stringResource(id = R.string.grid_text_2),
-                backgroundColor = Color.Yellow,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(modifier = Modifier.weight(1f)) {
-            CardSection(
-                title = stringResource(id = R.string.grid_title_3),
-                text = stringResource(id = R.string.grid_text_3),
-                backgroundColor = Color.Cyan,
-                modifier = Modifier.weight(1f)
-            )
-            CardSection(
-                title = stringResource(id = R.string.grid_title_4),
-                text = stringResource(id = R.string.grid_text_4),
-                backgroundColor = Color.LightGray,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-fun CardSection(
+fun WellnessScreen(
     modifier: Modifier = Modifier,
-    title: String,
-    text: String,
-    backgroundColor: Color
+    wellnessViewModel: WellnessViewModel = viewModel()
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(bottom = 16.dp),
-            fontWeight = FontWeight.Bold
-        )
-        Text(text = text, textAlign = TextAlign.Justify)
-    }
-}
+    Column(modifier = modifier) {
+        StatefulCounter(modifier)
 
-@Composable
-fun TaskManagerCheck(modifier: Modifier = Modifier) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_task_completed),
-            contentDescription = null
-        )
-        Text(
-            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
-            text = stringResource(id = R.string.check_1),
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            modifier = modifier,
-            text = stringResource(id = R.string.check_2), fontSize = 16.sp
+        WellnessTasksList(
+            list = wellnessViewModel.tasks,
+            onCloseTask = { task -> wellnessViewModel.remove(task) },
+            onCheckedChange = { task, checked -> wellnessViewModel.checkedChange(task, checked)}
         )
     }
 }
 
+
 @Composable
-fun Tutorials(modifier: Modifier = Modifier) {
-    Column() {
-        Image(
-            modifier = modifier.fillMaxWidth(),
-            painter = painterResource(id = R.drawable.bg_compose_background),
-            contentDescription = null
-        )
-        Text(
-            modifier = modifier.padding(16.dp),
-            text = stringResource(id = R.string.line_1), fontSize = 24.sp
-        )
-        Text(
-            modifier = modifier.padding(start = 16.dp, end = 16.dp),
-            text = stringResource(id = R.string.line_2),
-            textAlign = TextAlign.Justify
-        )
-        Text(
-            modifier = modifier.padding(16.dp),
-            text = stringResource(id = R.string.line_3),
-            textAlign = TextAlign.Justify
-        )
+fun StatefulCounter(modifier: Modifier = Modifier) {
+    var count by remember {
+        mutableStateOf(0)
+    }
+
+    StatelessCounter(modifier = modifier, count = count, onIncrement = { count++ })
+}
+
+@Composable
+fun StatelessCounter(modifier: Modifier = Modifier, count: Int, onIncrement: () -> Unit) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        if (count > 0) {
+            Text("You've had $count glasses.")
+        }
+        Button(onClick = onIncrement, Modifier.padding(top = 8.dp), enabled = count < 10) {
+            Text(text = "Add one")
+        }
+    }
+}
+
+@Composable
+fun WaterCounter(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        var count by remember { mutableStateOf(0) }
+        if (count > 0) {
+            Text("You've had $count glasses.")
+        }
+        Button(onClick = { count++ }, Modifier.padding(top = 8.dp), enabled = count < 10) {
+            Text("Add one")
+        }
     }
 }
 
@@ -165,7 +113,7 @@ fun DefaultPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            StudyApp()
+            WellnessScreen()
         }
     }
 }
